@@ -81,41 +81,36 @@ static BBUncrustifyPlugin *sharedPlugin = nil;
 	NSString *openFileName = [[currentDocument fileURL] absoluteString];
 	NSUInteger openFileHash = [[[BBXcode currentSourceCodeDocument] textStorage] hash];
 
-	if (openFileName) {
+	// file should only be processed when it was saved ~3 seconds ago.
+	if (openFileName && currentDocument && currentTextView) {
 		// Make a record of the current file that's open.
-		NSDictionary *existingRecord = [_openFileHashes objectForKey:openFileName];
-		NSDate *date = (existingRecord ? existingRecord[@"pt"] : [NSDate date]);
+		NSMutableDictionary *existingRecord = [_openFileHashes objectForKey:openFileName] ? : [[NSMutableDictionary alloc] initWithObjects:@[[NSNumber numberWithUnsignedInteger:openFileHash]] forKeys:@[@"oldHash"]];
+		existingRecord[@"hash"] = [NSNumber numberWithUnsignedInteger:openFileHash];
+		existingRecord[@"dirty"] = [NSNumber numberWithBool:[existingRecord[@"oldHash"] unsignedIntegerValue] != openFileHash];
+		existingRecord[@"doc"] = currentDocument;
+		existingRecord[@"textview"] = currentTextView;
+		existingRecord[@"pt"] = currentDocument.fileModificationDate ? : [NSDate date];
 
-		// Reset date if the file has changed in the last ~2 seconds.
-		if (existingRecord && [existingRecord[@"hash"] unsignedIntegerValue] != openFileHash) {
-			date = [NSDate date];
-		}
+		[_openFileHashes setValue:existingRecord forKey:openFileName];
 
-		[_openFileHashes setValue:@{ @"hash" : [NSNumber numberWithUnsignedInteger:openFileHash],
-		                             @"doc": currentDocument,
-		                             @"textview": currentTextView,
-		                             @"pt": date } forKey:openFileName];
-
-		// Uncrustify a file if it has been closed, or changed.
+		// Uncrustify a file if it has been closed, or changed, between 3-4 seconds ago.
 		for (NSString *key in _openFileHashes) {
 			NSDictionary *fileDetailsDict = [_openFileHashes valueForKey:key];
 			NSDate *pollTime = [fileDetailsDict valueForKey:@"pt"];
-			if (fabsf([pollTime timeIntervalSinceNow]) < 5) {
+			if (fabsf([pollTime timeIntervalSinceNow]) < 3 || fabsf([pollTime timeIntervalSinceNow]) > 5) {
 				continue;
 			}
-			NSLog(@"Uncrustify potentially: %@", fileDetailsDict);
-
-			NSString *name = key;
-			NSUInteger hash = [[fileDetailsDict valueForKey:@"hash"] unsignedIntegerValue];
+			if (![fileDetailsDict[@"dirty"] boolValue]) {
+				continue;
+			}
 
 			// The document needs to have been open for at least 5 seconds and to have changed.
-			if ([name isEqualToString:openFileName] || hash != openFileHash) {
-				NSLog(@"Uncrustifying file: %@", openFileName);
-				IDESourceCodeDocument *doc = [fileDetailsDict valueForKey:@"doc"];
-				NSTextView *textView = [fileDetailsDict valueForKey:@"textview"];
-				[self uncrustifySourceCodeTextView:textView inDocument:doc];
-			}
-			[_openFileHashes removeObjectForKey:key];
+			IDESourceCodeDocument *doc = [fileDetailsDict valueForKey:@"doc"];
+			NSTextView *textView = [fileDetailsDict valueForKey:@"textview"];
+			[self uncrustifySourceCodeTextView:textView inDocument:doc];
+
+			existingRecord[@"oldHash"] = [NSNumber numberWithUnsignedInteger:openFileHash];
+			[_openFileHashes setValue:existingRecord forKey:openFileName];
 		}
 	}
 
@@ -162,15 +157,14 @@ static BBUncrustifyPlugin *sharedPlugin = nil;
 
 	if ((newCharacterRange.location + newCharacterRange.length) < textStorage.string.length) {
 		// move cursor adsf
-		NSLog(@"Uncrustify: moving cursor position: %@", NSStringFromRange(newCharacterRange));
 		[textView scrollRectToVisible:visibleRect];
 
 		// If we can just select all the initial ranges (say, if the number of lines hasn't changed) do so.
-		// We make the selection after adjusting ranges in the most naive way.
+		// We make the selection after adjusting ranges in the most naive way -
+		//  by adding/subtracting the change in string length.
 		if (originalLine == restoredLine) {
 			NSMutableArray *ranges = [[NSMutableArray alloc] initWithCapacity:originalRanges.count];
 			for (NSValue *rangeValue in originalRanges) {
-				NSLog(@"Uncrustify: Adjusting range by %lu", lengthDiff);
 				NSRange adjustedRange = [rangeValue rangeValue];
 				adjustedRange.location -= lengthDiff;
 				[ranges addObject:[NSValue valueWithRange:adjustedRange]];

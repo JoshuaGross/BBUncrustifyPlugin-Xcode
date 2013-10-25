@@ -126,15 +126,21 @@ NSString * BBStringByTrimmingTrailingCharactersFromString(NSString *string, NSCh
         if ([navigableItem isKindOfClass:NSClassFromString(@"IDEGroupNavigableItem")]) {
             // IDE-GROUP (a folder in the navigator)
             IDEGroup *group = (IDEGroup *)representedObject;
-            folderURL = group.resolvedFilePath.fileURL;
+            if ([group respondsToSelector:@selector(resolvedFilePath)]) {
+                folderURL = group.resolvedFilePath.fileURL;
+            }
         } else if ([navigableItem isKindOfClass:NSClassFromString(@"IDEContainerFileReferenceNavigableItem")]) {
             // CONTAINER (an Xcode project)
             IDEFileReference *fileReference = representedObject;
-            folderURL = [fileReference.resolvedFilePath.fileURL URLByDeletingLastPathComponent];
+            if ([fileReference respondsToSelector:@selector(resolvedFilePath)]) {
+                folderURL = [fileReference.resolvedFilePath.fileURL URLByDeletingLastPathComponent];
+            }
         } else if ([navigableItem isKindOfClass:NSClassFromString(@"IDEKeyDrivenNavigableItem")]) {
             // WORKSPACE (root: Xcode project or workspace)
             IDEWorkspace *workspace = representedObject;
-            folderURL = [workspace.representingFilePath.fileURL URLByDeletingLastPathComponent];
+            if ([workspace respondsToSelector:@selector(representingFilePath)]) {
+                folderURL = [workspace.representingFilePath.fileURL URLByDeletingLastPathComponent];
+            }
         }
         if (folderURL && ![mArray containsObject:folderURL]) [mArray addObject:folderURL];
         navigableItem = [navigableItem parentItem];

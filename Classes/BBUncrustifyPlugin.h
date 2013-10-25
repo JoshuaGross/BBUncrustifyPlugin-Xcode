@@ -9,6 +9,8 @@
 #import <Foundation/Foundation.h>
 #import <AppKit/AppKit.h>
 
+#define kBBAutoUncrustify @"kBBAutoUncrustify"
+
 @interface BBUncrustifyPlugin : NSObject
 
 @end

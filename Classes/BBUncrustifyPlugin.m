@@ -11,6 +11,10 @@
 #import "BBXcode.h"
 #import "BBPluginUpdater.h"
 
+@interface BBUncrustifyPlugin ()
+@property (nonatomic, strong) NSMutableDictionary *openFileHashes;
+@end
+
 @implementation BBUncrustifyPlugin {}
 
 #pragma mark - Setup and Teardown
@@ -25,39 +29,159 @@ static BBUncrustifyPlugin *sharedPlugin = nil;
 }
 
 - (id)init {
-    self  = [super init];
-    if (self) {
-        NSMenuItem *editMenuItem = [[NSApp mainMenu] itemWithTitle:@"Edit"];
-        if (editMenuItem) {
-            [[editMenuItem submenu] addItem:[NSMenuItem separatorItem]];
-            
-            NSMenuItem *menuItem;
-            menuItem = [[NSMenuItem alloc] initWithTitle:@"Uncrustify Selected Files" action:@selector(uncrustifySelectedFiles:) keyEquivalent:@""];
-            [menuItem setTarget:self];
-            [[editMenuItem submenu] addItem:menuItem];
-            [menuItem release];
-            
-            menuItem = [[NSMenuItem alloc] initWithTitle:@"Uncrustify Active File" action:@selector(uncrustifyActiveFile:) keyEquivalent:@""];
-            [menuItem setTarget:self];
-            [[editMenuItem submenu] addItem:menuItem];
-            [menuItem release];
-            
-            menuItem = [[NSMenuItem alloc] initWithTitle:@"Uncrustify Selected Lines" action:@selector(uncrustifySelectedLines:) keyEquivalent:@""];
-            [menuItem setTarget:self];
-            [[editMenuItem submenu] addItem:menuItem];
-            [menuItem release];
-            
-            menuItem = [[NSMenuItem alloc] initWithTitle:@"Open with UncrustifyX" action:@selector(openWithUncrustifyX:) keyEquivalent:@""];
-            [menuItem setTarget:self];
-            [[editMenuItem submenu] addItem:menuItem];
-            [menuItem release];
-            
-            [BBPluginUpdater sharedUpdater].delegate = self;
-            
-            NSLog(@"BBUncrustifyPlugin (V%@) loaded", [[[NSBundle bundleForClass:[self class]] infoDictionary] objectForKey:@"CFBundleVersion"]);
-        }
-    }
-    return self;
+	self  = [super init];
+	if (self) {
+		NSMenuItem *editMenuItem = [[NSApp mainMenu] itemWithTitle:@"Edit"];
+		if (editMenuItem) {
+			[[editMenuItem submenu] addItem:[NSMenuItem separatorItem]];
+
+			NSMenuItem *menuItem;
+			menuItem = [[NSMenuItem alloc] initWithTitle:@"Uncrustify Selected Files" action:@selector(uncrustifySelectedFiles:) keyEquivalent:@""];
+			[menuItem setTarget:self];
+			[[editMenuItem submenu] addItem:menuItem];
+			[menuItem release];
+
+			menuItem = [[NSMenuItem alloc] initWithTitle:@"Uncrustify Active File" action:@selector(uncrustifyActiveFile:) keyEquivalent:@""];
+			[menuItem setTarget:self];
+			[[editMenuItem submenu] addItem:menuItem];
+			[menuItem release];
+
+			menuItem = [[NSMenuItem alloc] initWithTitle:@"Uncrustify Selected Lines" action:@selector(uncrustifySelectedLines:) keyEquivalent:@""];
+			[menuItem setTarget:self];
+			[[editMenuItem submenu] addItem:menuItem];
+			[menuItem release];
+
+			menuItem = [[NSMenuItem alloc] initWithTitle:@"Open with UncrustifyX" action:@selector(openWithUncrustifyX:) keyEquivalent:@""];
+			[menuItem setTarget:self];
+			[[editMenuItem submenu] addItem:menuItem];
+			[menuItem release];
+
+			menuItem = [[NSMenuItem alloc] initWithTitle:@"Automatically Uncrustify open files" action:@selector(toggleAutomaticUncrustify:) keyEquivalent:@""];
+			[menuItem setTarget:self];
+			[menuItem setState:[[NSUserDefaults standardUserDefaults] boolForKey:kBBAutoUncrustify] ? NSOnState:NSOffState];
+			[[editMenuItem submenu] addItem:menuItem];
+			[menuItem release];
+
+			if ([[NSUserDefaults standardUserDefaults] boolForKey:kBBAutoUncrustify]) {
+				_openFileHashes = [[NSMutableDictionary alloc] initWithCapacity:2];
+				[self automaticUncrustify];
+			}
+
+			[BBPluginUpdater sharedUpdater].delegate = self;
+
+			NSLog(@"BBUncrustifyPlugin (V%@) loaded", [[[NSBundle bundleForClass:[self class]] infoDictionary] objectForKey:@"CFBundleVersion"]);
+		}
+	}
+	return self;
+}
+
+- (void)automaticUncrustify {
+	IDESourceCodeDocument *currentDocument = [BBXcode currentSourceCodeDocument];
+	NSTextView *currentTextView = [BBXcode currentSourceCodeTextView];
+	NSString *openFileName = [[currentDocument fileURL] absoluteString];
+	NSUInteger openFileHash = [[[BBXcode currentSourceCodeDocument] textStorage] hash];
+
+	if (openFileName) {
+		// Make a record of the current file that's open.
+		NSDictionary *existingRecord = [_openFileHashes objectForKey:openFileName];
+		NSDate *date = (existingRecord ? existingRecord[@"pt"] : [NSDate date]);
+
+		// Reset date if the file has changed in the last ~2 seconds.
+		if (existingRecord && [existingRecord[@"hash"] unsignedIntegerValue] != openFileHash) {
+			date = [NSDate date];
+		}
+
+		[_openFileHashes setValue:@{ @"hash" : [NSNumber numberWithUnsignedInteger:openFileHash],
+		                             @"doc": currentDocument,
+		                             @"textview": currentTextView,
+		                             @"pt": date } forKey:openFileName];
+
+		// Uncrustify a file if it has been closed, or changed.
+		for (NSString *key in _openFileHashes) {
+			NSDictionary *fileDetailsDict = [_openFileHashes valueForKey:key];
+			NSDate *pollTime = [fileDetailsDict valueForKey:@"pt"];
+			if (fabsf([pollTime timeIntervalSinceNow]) < 5) {
+				continue;
+			}
+			NSLog(@"Uncrustify potentially: %@", fileDetailsDict);
+
+			NSString *name = key;
+			NSUInteger hash = [[fileDetailsDict valueForKey:@"hash"] unsignedIntegerValue];
+
+			// The document needs to have been open for at least 5 seconds and to have changed.
+			if ([name isEqualToString:openFileName] || hash != openFileHash) {
+				NSLog(@"Uncrustifying file: %@", openFileName);
+				IDESourceCodeDocument *doc = [fileDetailsDict valueForKey:@"doc"];
+				NSTextView *textView = [fileDetailsDict valueForKey:@"textview"];
+				[self uncrustifySourceCodeTextView:textView inDocument:doc];
+			}
+			[_openFileHashes removeObjectForKey:key];
+		}
+	}
+
+	// Trigger uncrustify check every 2 seconds
+	if ([[NSUserDefaults standardUserDefaults] boolForKey:kBBAutoUncrustify]) {
+		double delayInSeconds = 2.0;
+		dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
+		dispatch_after(popTime, dispatch_get_main_queue(), ^(void) {
+		    [self automaticUncrustify];
+		});
+	}
+}
+
+- (void)uncrustifySourceCodeTextView:(NSTextView *)textView inDocument:(IDESourceCodeDocument *)document {
+	DVTSourceTextStorage *textStorage = [document textStorage];
+
+	// We try to restore the original cursor position after the uncrustification. We compute a percentage value
+	// expressing the actual selected line compared to the total number of lines of the document. After the uncrustification,
+	// we restore the position taking into account the modified number of lines of the document.
+
+	CGRect visibleRect = [textView visibleRect];
+	NSArray *originalRanges = [textView selectedRanges];
+	NSRange originalCharacterRange = [textView selectedRange];
+	NSRange originalLineRange = [textStorage lineRangeForCharacterRange:originalCharacterRange];
+	NSRange originalDocumentLineRange = [textStorage lineRangeForCharacterRange:NSMakeRange(0, textStorage.string.length)];
+	NSUInteger originalLength = textStorage.string.length;
+
+	CGFloat verticalRelativePosition = (CGFloat)originalLineRange.location / (CGFloat)originalDocumentLineRange.length;
+
+	IDEWorkspace *currentWorkspace = [BBXcode currentWorkspaceDocument].workspace;
+	[BBXcode uncrustifyCodeOfDocument:document inWorkspace:currentWorkspace];
+
+	NSUInteger newLength = textStorage.string.length;
+	NSInteger lengthDiff = originalLength - newLength;
+	NSRange newDocumentLineRange = [textStorage lineRangeForCharacterRange:NSMakeRange(0, textStorage.string.length)];
+	NSUInteger originalLine = roundf(verticalRelativePosition * (CGFloat)originalDocumentLineRange.length);
+	NSUInteger restoredLine = roundf(verticalRelativePosition * (CGFloat)newDocumentLineRange.length);
+
+	if (newLength < restoredLine) {
+		return;
+	}
+
+	NSRange newCharacterRange = [textStorage characterRangeForLineRange:NSMakeRange(restoredLine, 0)];
+
+	if ((newCharacterRange.location + newCharacterRange.length) < textStorage.string.length) {
+		// move cursor adsf
+		NSLog(@"Uncrustify: moving cursor position: %@", NSStringFromRange(newCharacterRange));
+		[textView scrollRectToVisible:visibleRect];
+
+		// If we can just select all the initial ranges (say, if the number of lines hasn't changed) do so.
+		// We make the selection after adjusting ranges in the most naive way.
+		if (originalLine == restoredLine) {
+			NSMutableArray *ranges = [[NSMutableArray alloc] initWithCapacity:originalRanges.count];
+			for (NSValue *rangeValue in originalRanges) {
+				NSLog(@"Uncrustify: Adjusting range by %lu", lengthDiff);
+				NSRange adjustedRange = [rangeValue rangeValue];
+				adjustedRange.location -= lengthDiff;
+				[ranges addObject:[NSValue valueWithRange:adjustedRange]];
+			}
+			[textView setSelectedRanges:ranges];
+			[ranges release];
+		}
+		else {
+			[textView setSelectedRange:newCharacterRange affinity:NSSelectionAffinityDownstream stillSelecting:NO];
+		}
+	}
 }
 
 #pragma mark - Actions
@@ -81,37 +205,12 @@ static BBUncrustifyPlugin *sharedPlugin = nil;
 }
 
 - (IBAction)uncrustifyActiveFile:(id)sender {
-    IDESourceCodeDocument *document = [BBXcode currentSourceCodeDocument];
-    if (!document) return;
-    
-    NSTextView *textView = [BBXcode currentSourceCodeTextView];
-    
-    DVTSourceTextStorage *textStorage = [document textStorage];
-    
-    // We try to restore the original cursor position after the uncrustification. We compute a percentage value
-    // expressing the actual selected line compared to the total number of lines of the document. After the uncrustification,
-    // we restore the position taking into account the modified number of lines of the document.
-    
-    NSRange originalCharacterRange = [textView selectedRange];
-    NSRange originalLineRange = [textStorage lineRangeForCharacterRange:originalCharacterRange];
-    NSRange originalDocumentLineRange = [textStorage lineRangeForCharacterRange:NSMakeRange(0, textStorage.string.length)];
-    
-    CGFloat verticalRelativePosition = (CGFloat)originalLineRange.location / (CGFloat)originalDocumentLineRange.length;
-    
-    IDEWorkspace *currentWorkspace = [BBXcode currentWorkspaceDocument].workspace;
-    [BBXcode uncrustifyCodeOfDocument:document inWorkspace:currentWorkspace];
-    
-    NSRange newDocumentLineRange = [textStorage lineRangeForCharacterRange:NSMakeRange(0, textStorage.string.length)];
-    NSUInteger restoredLine = roundf(verticalRelativePosition * (CGFloat)newDocumentLineRange.length);
-    
-    NSRange newCharacterRange = [textStorage characterRangeForLineRange:NSMakeRange(restoredLine, 0)];
-    
-    if (newCharacterRange.location < textStorage.string.length) {
-        [[BBXcode currentSourceCodeTextView] setSelectedRanges:@[[NSValue valueWithRange:newCharacterRange]]];
-        [textView scrollRangeToVisible:newCharacterRange];
-    }
-    
-    [[BBPluginUpdater sharedUpdater] checkForUpdatesIfNeeded];
+	IDESourceCodeDocument *document = [BBXcode currentSourceCodeDocument];
+	if (!document) return;
+
+	[self uncrustifySourceCodeTextView:[BBXcode currentSourceCodeTextView] inDocument:document];
+
+	[[BBPluginUpdater sharedUpdater] checkForUpdatesIfNeeded];
 }
 
 - (IBAction)uncrustifySelectedLines:(id)sender {

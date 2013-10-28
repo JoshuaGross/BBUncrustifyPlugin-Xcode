@@ -22,10 +22,10 @@
 static BBUncrustifyPlugin *sharedPlugin = nil;
 
 + (void)pluginDidLoad:(NSBundle *)plugin {
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        sharedPlugin = [[self alloc] init];
-    });
+	static dispatch_once_t onceToken;
+	dispatch_once(&onceToken, ^{
+	    sharedPlugin = [[self alloc] init];
+	});
 }
 
 - (id)init {

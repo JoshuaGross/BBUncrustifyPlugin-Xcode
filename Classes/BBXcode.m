@@ -153,37 +153,39 @@ NSString * BBStringByTrimmingTrailingCharactersFromString(NSString *string, NSCh
 #pragma mark - Uncrustify
 
 + (BOOL)uncrustifyCodeOfDocument:(IDESourceCodeDocument *)document inWorkspace:(IDEWorkspace *)workspace {
-    DVTSourceTextStorage *textStorage = [document textStorage];
-    
-    NSString *originalString = [NSString stringWithString:textStorage.string];
-    
-    if (textStorage.string.length > 0) {
-        NSArray *additionalConfigurationFolderURLs = nil;
-        if (workspace) {
-            IDENavigableItemCoordinator *coordinator = [[IDENavigableItemCoordinator alloc] init];
-            IDENavigableItem *navigableItem = [coordinator structureNavigableItemForDocumentURL:document.fileURL inWorkspace:workspace error:nil];
-            [coordinator release];
-            if (navigableItem) {
-                additionalConfigurationFolderURLs = [BBXcode containerFolderURLsForNavigableItem:navigableItem];
-            }
-        }
-        
-        NSMutableDictionary *options = [NSMutableDictionary dictionaryWithDictionary:@{ BBUncrustifyOptionSourceFilename: document.fileURL.lastPathComponent }];
-        if (additionalConfigurationFolderURLs.count > 0) {
-            [options setObject:additionalConfigurationFolderURLs forKey:BBUncrustifyOptionSupplementalConfigurationFolders];
-        }
-        
-        [textStorage beginEditing];
-        NSString *uncrustifiedCode = [BBUncrustify uncrustifyCodeFragment:textStorage.string options:options];
-        if (![uncrustifiedCode isEqualToString:textStorage.string]) {
-            [textStorage replaceCharactersInRange:NSMakeRange(0, textStorage.string.length) withString:uncrustifiedCode withUndoManager:[document undoManager]];
-        }
-        [BBXcode normalizeCodeAtRange:NSMakeRange(0, textStorage.string.length) document:document];
-        [textStorage endEditing];
-    }
-    
-    BOOL codeHasChanged = (originalString && ![originalString isEqualToString:textStorage.string]);
-    return codeHasChanged;
+	DVTSourceTextStorage *textStorage = [document textStorage];
+
+	NSString *originalString = [NSString stringWithString:textStorage.string];
+
+	if (textStorage.string.length > 0) {
+		NSArray *additionalConfigurationFolderURLs = nil;
+		if (workspace) {
+			IDENavigableItemCoordinator *coordinator = [[IDENavigableItemCoordinator alloc] init];
+			IDENavigableItem *navigableItem = [coordinator structureNavigableItemForDocumentURL:document.fileURL inWorkspace:workspace error:nil];
+			[coordinator release];
+			if (navigableItem) {
+				additionalConfigurationFolderURLs = [BBXcode containerFolderURLsForNavigableItem:navigableItem];
+			}
+		}
+
+		NSMutableDictionary *options = [NSMutableDictionary dictionaryWithDictionary:@{ BBUncrustifyOptionSourceFilename: document.fileURL.lastPathComponent }];
+		if (additionalConfigurationFolderURLs.count > 0) {
+			[options setObject:additionalConfigurationFolderURLs forKey:BBUncrustifyOptionSupplementalConfigurationFolders];
+		}
+
+		[textStorage beginEditing];
+		NSString *uncrustifiedCode = [BBUncrustify uncrustifyCodeFragment:textStorage.string options:options];
+		[[document undoManager] beginUndoGrouping];
+		if (![uncrustifiedCode isEqualToString:textStorage.string]) {
+			[textStorage replaceCharactersInRange:NSMakeRange(0, textStorage.string.length) withString:uncrustifiedCode withUndoManager:[document undoManager]];
+		}
+		[BBXcode normalizeCodeAtRange:NSMakeRange(0, textStorage.string.length) document:document];
+		[[document undoManager] endUndoGrouping];
+		[textStorage endEditing];
+	}
+
+	BOOL codeHasChanged = (originalString && ![originalString isEqualToString:textStorage.string]);
+	return codeHasChanged;
 }
 
 + (BOOL)uncrustifyCodeAtRanges:(NSArray *)ranges document:(IDESourceCodeDocument *)document inWorkspace:(IDEWorkspace *)workspace {

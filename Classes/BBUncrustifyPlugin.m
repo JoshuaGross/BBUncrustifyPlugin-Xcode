@@ -257,6 +257,10 @@ static BBUncrustifyPlugin *sharedPlugin = nil;
     BOOL boolForOption = ![[NSUserDefaults standardUserDefaults] boolForKey:kBBAutoUncrustify];
     [[NSUserDefaults standardUserDefaults] setBool:boolForOption forKey:kBBAutoUncrustify];
     [sender setState:(boolForOption ? NSOnState : NSOffState)];
+    
+    if (boolForOption) {
+        [self automaticUncrustify];
+    }
 }
 
 #pragma mark - NSMenuValidation

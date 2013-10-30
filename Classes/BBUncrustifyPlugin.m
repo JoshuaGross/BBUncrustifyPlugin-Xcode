@@ -40,27 +40,31 @@ static BBUncrustifyPlugin *sharedPlugin = nil;
 			[menuItem setTarget:self];
 			[[editMenuItem submenu] addItem:menuItem];
 			[menuItem release];
+            menuItem = nil;
 
 			menuItem = [[NSMenuItem alloc] initWithTitle:@"Uncrustify Active File" action:@selector(uncrustifyActiveFile:) keyEquivalent:@""];
 			[menuItem setTarget:self];
 			[[editMenuItem submenu] addItem:menuItem];
 			[menuItem release];
+            menuItem = nil;
 
 			menuItem = [[NSMenuItem alloc] initWithTitle:@"Uncrustify Selected Lines" action:@selector(uncrustifySelectedLines:) keyEquivalent:@""];
 			[menuItem setTarget:self];
 			[[editMenuItem submenu] addItem:menuItem];
 			[menuItem release];
+            menuItem = nil;
 
 			menuItem = [[NSMenuItem alloc] initWithTitle:@"Open with UncrustifyX" action:@selector(openWithUncrustifyX:) keyEquivalent:@""];
 			[menuItem setTarget:self];
 			[[editMenuItem submenu] addItem:menuItem];
 			[menuItem release];
+            menuItem = nil;
 
-			menuItem = [[NSMenuItem alloc] initWithTitle:@"Automatically Uncrustify open files" action:@selector(toggleAutomaticUncrustify:) keyEquivalent:@""];
+			menuItem = [[NSMenuItem alloc] initWithTitle:@"Auto-Uncrustify open files" action:@selector(toggleAutomaticUncrustify:) keyEquivalent:@""];
 			[menuItem setTarget:self];
-			[menuItem setState:[[NSUserDefaults standardUserDefaults] boolForKey:kBBAutoUncrustify] ? NSOnState:NSOffState];
 			[[editMenuItem submenu] addItem:menuItem];
 			[menuItem release];
+            menuItem = nil;
 
 			if ([[NSUserDefaults standardUserDefaults] boolForKey:kBBAutoUncrustify]) {
 				_openFileHashes = [[NSMutableDictionary alloc] initWithCapacity:2];
@@ -249,6 +253,12 @@ static BBUncrustifyPlugin *sharedPlugin = nil;
     [[BBPluginUpdater sharedUpdater] checkForUpdatesIfNeeded];
 }
 
+- (IBAction)toggleAutomaticUncrustify:(id)sender {
+    BOOL boolForOption = ![[NSUserDefaults standardUserDefaults] boolForKey:kBBAutoUncrustify];
+    [[NSUserDefaults standardUserDefaults] setBool:boolForOption forKey:kBBAutoUncrustify];
+    [sender setState:(boolForOption ? NSOnState : NSOffState)];
+}
+
 #pragma mark - NSMenuValidation
 
 - (BOOL)validateMenuItem:(NSMenuItem *)menuItem {
@@ -266,6 +276,10 @@ static BBUncrustifyPlugin *sharedPlugin = nil;
             validated = (selectedRanges.count > 0);
         }
         return validated;
+    } else if ([menuItem action] == @selector(toggleAutomaticUncrustify:)) {
+        [menuItem setEnabled:YES];
+        [menuItem setState:[[NSUserDefaults standardUserDefaults] boolForKey:kBBAutoUncrustify] ? NSOnState : NSOffState];
+        return YES;
     } else if ([menuItem action] == @selector(openWithUncrustifyX:)) {
         BOOL appExists = NO;
         NSURL *appURL = [BBUncrustify uncrustifyXApplicationURL];

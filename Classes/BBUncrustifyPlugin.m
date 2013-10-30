@@ -107,7 +107,7 @@ static BBUncrustifyPlugin *sharedPlugin = nil;
 			// The document needs to have been open for at least 5 seconds and to have changed.
 			IDESourceCodeDocument *doc = [fileDetailsDict valueForKey:@"doc"];
 			NSTextView *textView = [fileDetailsDict valueForKey:@"textview"];
-			[self uncrustifySourceCodeTextView:textView inDocument:doc];
+			[self uncrustifySourceCodeTextView:textView inDocument:doc requireCustomConfig:YES];
 
 			existingRecord[@"oldHash"] = [NSNumber numberWithUnsignedInteger:openFileHash];
 			[_openFileHashes setValue:existingRecord forKey:openFileName];
@@ -124,7 +124,7 @@ static BBUncrustifyPlugin *sharedPlugin = nil;
 	}
 }
 
-- (void)uncrustifySourceCodeTextView:(NSTextView *)textView inDocument:(IDESourceCodeDocument *)document {
+- (void)uncrustifySourceCodeTextView:(NSTextView *)textView inDocument:(IDESourceCodeDocument *)document requireCustomConfig:(BOOL)requireCustomConfig {
 	DVTSourceTextStorage *textStorage = [document textStorage];
 
 	// We try to restore the original cursor position after the uncrustification. We compute a percentage value
@@ -141,7 +141,7 @@ static BBUncrustifyPlugin *sharedPlugin = nil;
 	CGFloat verticalRelativePosition = (CGFloat)originalLineRange.location / (CGFloat)originalDocumentLineRange.length;
 
 	IDEWorkspace *currentWorkspace = [BBXcode currentWorkspaceDocument].workspace;
-	[BBXcode uncrustifyCodeOfDocument:document inWorkspace:currentWorkspace];
+	[BBXcode uncrustifyCodeOfDocument:document inWorkspace:currentWorkspace requireCustomConfig:requireCustomConfig];
 
 	NSUInteger newLength = textStorage.string.length;
 	NSInteger lengthDiff = originalLength - newLength;
@@ -202,7 +202,7 @@ static BBUncrustifyPlugin *sharedPlugin = nil;
 	IDESourceCodeDocument *document = [BBXcode currentSourceCodeDocument];
 	if (!document) return;
 
-	[self uncrustifySourceCodeTextView:[BBXcode currentSourceCodeTextView] inDocument:document];
+	[self uncrustifySourceCodeTextView:[BBXcode currentSourceCodeTextView] inDocument:document requireCustomConfig:NO];
 
 	[[BBPluginUpdater sharedUpdater] checkForUpdatesIfNeeded];
 }

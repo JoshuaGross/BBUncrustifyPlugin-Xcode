@@ -156,6 +156,10 @@ NSString *BBStringByTrimmingTrailingCharactersFromString(NSString *string, NSCha
 #pragma mark - Uncrustify
 
 + (BOOL)uncrustifyCodeOfDocument:(IDESourceCodeDocument *)document inWorkspace:(IDEWorkspace *)workspace {
+	return [BBXcode uncrustifyCodeOfDocument:document inWorkspace:workspace requireCustomConfig:NO];
+}
+
++ (BOOL)uncrustifyCodeOfDocument:(IDESourceCodeDocument *)document inWorkspace:(IDEWorkspace *)workspace requireCustomConfig:(BOOL)requireCustomConfig {
 	DVTSourceTextStorage *textStorage = [document textStorage];
 
 	NSString *originalString = [NSString stringWithString:textStorage.string];
@@ -172,6 +176,10 @@ NSString *BBStringByTrimmingTrailingCharactersFromString(NSString *string, NSCha
 		}
 
 		NSMutableDictionary *options = [NSMutableDictionary dictionaryWithDictionary:@{ BBUncrustifyOptionSourceFilename: document.fileURL.lastPathComponent }];
+		if (requireCustomConfig) {
+			options[BBUncrustifyOptionRequireCustomConfig] = [NSNumber numberWithBool:requireCustomConfig];
+			options[BBUncrustifyOptionWorkspaceRoot] = [workspace.representingFilePath.fileURL URLByDeletingLastPathComponent];
+		}
 		if (additionalConfigurationFolderURLs.count > 0) {
 			[options setObject:additionalConfigurationFolderURLs forKey:BBUncrustifyOptionSupplementalConfigurationFolders];
 		}

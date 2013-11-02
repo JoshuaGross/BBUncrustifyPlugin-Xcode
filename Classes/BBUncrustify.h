@@ -12,6 +12,7 @@
 
 extern NSString *const BBUncrustifyOptionEvictCommentInsertion;
 extern NSString *const BBUncrustifyOptionSourceFilename;
+extern NSString *const BBUncrustifyOptionSourceFilepath;
 extern NSString *const BBUncrustifyOptionSupplementalConfigurationFolders;   // NSArray of NSURL (array of urls representing folders)
 extern NSString *const BBUncrustifyOptionRequireCustomConfig;
 extern NSString *const BBUncrustifyOptionWorkspaceRoot;

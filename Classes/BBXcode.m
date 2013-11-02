@@ -175,7 +175,10 @@ NSString *BBStringByTrimmingTrailingCharactersFromString(NSString *string, NSCha
 			}
 		}
 
-		NSMutableDictionary *options = [NSMutableDictionary dictionaryWithDictionary:@{ BBUncrustifyOptionSourceFilename: document.fileURL.lastPathComponent }];
+		NSMutableDictionary *options = [NSMutableDictionary dictionaryWithDictionary:@{
+                                                                                       BBUncrustifyOptionSourceFilename: document.fileURL.lastPathComponent,
+                                                                                       BBUncrustifyOptionSourceFilepath: document.fileURL.path
+                                                                                       }];
 		if (requireCustomConfig) {
 			options[BBUncrustifyOptionRequireCustomConfig] = [NSNumber numberWithBool:requireCustomConfig];
 			options[BBUncrustifyOptionWorkspaceRoot] = [workspace.representingFilePath.fileURL URLByDeletingLastPathComponent];
@@ -231,7 +234,11 @@ NSString *BBStringByTrimmingTrailingCharactersFromString(NSString *string, NSCha
 		if (characterRange.location != NSNotFound) {
 			NSString *string = [textStorage.string substringWithRange:characterRange];
 			if (string.length > 0) {
-				NSMutableDictionary *options = [NSMutableDictionary dictionaryWithDictionary:@{ BBUncrustifyOptionEvictCommentInsertion: @YES, BBUncrustifyOptionSourceFilename: document.fileURL.lastPathComponent }];
+				NSMutableDictionary *options = [NSMutableDictionary dictionaryWithDictionary:@{
+                                                                                               BBUncrustifyOptionEvictCommentInsertion: @YES,
+                                                                                               BBUncrustifyOptionSourceFilename: document.fileURL.lastPathComponent,
+                                                                                               BBUncrustifyOptionSourceFilepath: document.fileURL.path
+                                                                                               }];
 				if (additionalConfigurationFolderURLs.count > 0) {
 					[options setObject:additionalConfigurationFolderURLs forKey:BBUncrustifyOptionSupplementalConfigurationFolders];
 				}

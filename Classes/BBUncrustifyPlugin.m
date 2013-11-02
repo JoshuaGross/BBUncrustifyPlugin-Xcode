@@ -86,7 +86,9 @@ static BBUncrustifyPlugin *sharedPlugin = nil;
 	NSUInteger openFileHash = [[[BBXcode currentSourceCodeDocument] textStorage] hash];
 
 	// file should only be processed when it was saved ~3 seconds ago.
-	if (openFileName && currentDocument && currentTextView) {
+    BOOL isObjCfile = [openFileName hasSuffix:@".m"] || [openFileName hasSuffix:@".h"];
+    BOOL shouldProcessFile = isObjCfile	 && currentDocument && currentTextView;
+	if (shouldProcessFile) {
 		// Make a record of the current file that's open.
 		NSMutableDictionary *existingRecord = [_openFileHashes objectForKey:openFileName] ? : [[NSMutableDictionary alloc] initWithObjects:@[[NSNumber numberWithUnsignedInteger:openFileHash]] forKeys:@[@"oldHash"]];
 		existingRecord[@"hash"] = [NSNumber numberWithUnsignedInteger:openFileHash];
@@ -198,7 +200,7 @@ static BBUncrustifyPlugin *sharedPlugin = nil;
         }
         [IDEDocumentController releaseEditorDocument:document];
     }
-    
+
     [[BBPluginUpdater sharedUpdater] checkForUpdatesIfNeeded];
 }
 

@@ -13,6 +13,7 @@ static NSString *const BBUncrustifyXBundleIdentifier = @"nz.co.xwell.UncrustifyX
 
 NSString *const BBUncrustifyOptionEvictCommentInsertion = @"evictCommentInsertion";
 NSString *const BBUncrustifyOptionSourceFilename = @"sourceFilename";
+NSString *const BBUncrustifyOptionSourceFilepath = @"sourceFilepath";
 NSString *const BBUncrustifyOptionSupplementalConfigurationFolders = @"supplementalConfigurationFolders";
 NSString *const BBUncrustifyOptionRequireCustomConfig = @"requireCustomConfig";
 NSString *const BBUncrustifyOptionWorkspaceRoot = @"workspaceRootURL";
@@ -37,6 +38,7 @@ static NSString *BBUUIDString() {
 	if (!codeFragment) return nil;
 
 	NSString *sourceFileName = options[BBUncrustifyOptionSourceFilename];
+	NSString *sourceFilePath = options[BBUncrustifyOptionSourceFilepath];
 	if (!sourceFileName || sourceFileName.length == 0) {
 		sourceFileName = @"source";
 	}
@@ -51,40 +53,46 @@ static NSString *BBUUIDString() {
 		NSLog(@"uncrustify additional lookup folders: %@", additionalLookupFolderURLs);
 	}
 	NSURL *configurationFileURL = [BBUncrustify resolvedConfigurationFileURLWithAdditionalLookupFolderURLs:additionalLookupFolderURLs];
-	NSLog(@"Configuration URL: %@", configurationFileURL);
 
 	// Does workspace path have to be in config file URL?
 	if ([options[BBUncrustifyOptionRequireCustomConfig] boolValue]) {
 		NSURL *workspaceRoot = options[BBUncrustifyOptionWorkspaceRoot];
-		NSLog(@"Configuration URL: %@ %@", configurationFileURL, workspaceRoot);
+
+        // Only format files actually in the main workspace.
 		if (workspaceRoot && ![[configurationFileURL absoluteString] hasPrefix:[workspaceRoot absoluteString]]) {
 			NSLog(@"Short-circuit: do not auto-format %@.", sourceFileName);
 			return codeFragment;
 		}
-	}
 
-	if ([options[BBUncrustifyOptionEvictCommentInsertion] boolValue]) {
-		NSString *configuration = [[NSString alloc] initWithContentsOfURL:configurationFileURL encoding:NSUTF8StringEncoding error:nil];
-		BOOL hasChanged = NO;
-		NSString *modifiedConfiguration = [BBUncrustify configurationByRemovingOptions:@[@"cmt_insert_file_"] fromConfiguration:configuration hasChanged:&hasChanged];
-		[configuration release];
-		if (hasChanged) {
-			configurationFileURL = [[NSURL fileURLWithPath:NSTemporaryDirectory() isDirectory:YES] URLByAppendingPathComponent:[NSString stringWithFormat:@"%@.cfg", BBUUIDString()] isDirectory:NO];
-			[modifiedConfiguration writeToURL:configurationFileURL atomically:YES encoding:NSUTF8StringEncoding error:nil];
-		}
-	}
+        // If the file in question is in Pods, the config file also has to be in that Pod.
+        if ([sourceFilePath rangeOfString:@"Pods"].location != [[configurationFileURL absoluteString] rangeOfString:@"Pods"].location) {
+            NSLog(@"Uncrustify: Short-circuit: do not format Pod code without its own config file (%@ / %@).", sourceFilePath, [configurationFileURL absoluteString]);
+            return codeFragment;
+        }
+    }
 
-	[self uncrustifyFilesAtURLs:@[codeFragmentFileURL] configurationFileURL:configurationFileURL];
+    if ([options[BBUncrustifyOptionEvictCommentInsertion] boolValue]) {
+        NSString *configuration = [[NSString alloc] initWithContentsOfURL:configurationFileURL encoding:NSUTF8StringEncoding error:nil];
+        BOOL hasChanged = NO;
+        NSString *modifiedConfiguration = [BBUncrustify configurationByRemovingOptions:@[@"cmt_insert_file_"] fromConfiguration:configuration hasChanged:&hasChanged];
+        [configuration release];
+        if (hasChanged) {
+            configurationFileURL = [[NSURL fileURLWithPath:NSTemporaryDirectory() isDirectory:YES] URLByAppendingPathComponent:[NSString stringWithFormat:@"%@.cfg", BBUUIDString()] isDirectory:NO];
+            [modifiedConfiguration writeToURL:configurationFileURL atomically:YES encoding:NSUTF8StringEncoding error:nil];
+        }
+    }
 
-	NSError *error = nil;
-	NSString *result = [NSString stringWithContentsOfURL:codeFragmentFileURL encoding:NSUTF8StringEncoding error:&error];
+    [self uncrustifyFilesAtURLs:@[codeFragmentFileURL] configurationFileURL:configurationFileURL];
 
-	if (error) {
-		NSLog(@"%@", error);
-		return nil;
-	}
+    NSError *error = nil;
+    NSString *result = [NSString stringWithContentsOfURL:codeFragmentFileURL encoding:NSUTF8StringEncoding error:&error];
 
-	return result;
+    if (error) {
+        NSLog(@"%@", error);
+        return nil;
+    }
+
+    return result;
 }
 
 + (NSString *)configurationByRemovingOptions:(NSArray *)options fromConfiguration:(NSString *)originalConfiguration hasChanged:(BOOL *)outHasChanged {

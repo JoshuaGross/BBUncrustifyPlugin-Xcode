@@ -187,9 +187,9 @@ NSString *BBStringByTrimmingTrailingCharactersFromString(NSString *string, NSCha
 			[options setObject:additionalConfigurationFolderURLs forKey:BBUncrustifyOptionSupplementalConfigurationFolders];
 		}
 
-		[textStorage beginEditing];
 		NSString *uncrustifiedCode = [BBUncrustify uncrustifyCodeFragment:textStorage.string options:options];
 		if (![uncrustifiedCode isEqualToString:textStorage.string]) {
+            [textStorage beginEditing];
             [[document undoManager] beginUndoGrouping];
 			[textStorage replaceCharactersInRange:NSMakeRange(0, textStorage.string.length) withString:uncrustifiedCode withUndoManager:[document undoManager]];
             [BBXcode normalizeCodeAtRange:NSMakeRange(0, textStorage.string.length) document:document];

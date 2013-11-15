@@ -50,7 +50,7 @@ static NSString *BBUUIDString() {
 
 	NSArray *additionalLookupFolderURLs = options[BBUncrustifyOptionSupplementalConfigurationFolders];
 	if (additionalLookupFolderURLs.count > 0) {
-		NSLog(@"uncrustify additional lookup folders: %@", additionalLookupFolderURLs);
+		NSLog(@"Uncrustify: additional lookup folders: %@", additionalLookupFolderURLs);
 	}
 	NSURL *configurationFileURL = [BBUncrustify resolvedConfigurationFileURLWithAdditionalLookupFolderURLs:additionalLookupFolderURLs];
 
@@ -60,7 +60,7 @@ static NSString *BBUUIDString() {
 
         // Only format files actually in the main workspace.
 		if (workspaceRoot && ![[configurationFileURL absoluteString] hasPrefix:[workspaceRoot absoluteString]]) {
-			NSLog(@"Short-circuit: do not auto-format %@.", sourceFileName);
+			NSLog(@"Uncrustify: Short-circuit: do not auto-format source file without config, %@.", sourceFileName);
 			return codeFragment;
 		}
 
@@ -69,6 +69,8 @@ static NSString *BBUUIDString() {
             NSLog(@"Uncrustify: Short-circuit: do not format Pod code without its own config file (%@ / %@).", sourceFilePath, [configurationFileURL absoluteString]);
             return codeFragment;
         }
+
+        NSLog(@"Uncrustify: Found good config file for source (%@ / %@).", sourceFilePath, [configurationFileURL absoluteString]);
     }
 
     if ([options[BBUncrustifyOptionEvictCommentInsertion] boolValue]) {

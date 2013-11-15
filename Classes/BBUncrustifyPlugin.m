@@ -31,6 +31,12 @@ static BBUncrustifyPlugin *sharedPlugin = nil;
 - (id)init {
 	self  = [super init];
 	if (self) {
+        // Set defaults
+        if (![[NSUserDefaults standardUserDefaults] objectForKey:kBBAutoUncrustify]) {
+            [[NSUserDefaults standardUserDefaults] setBool:YES forKey:kBBAutoUncrustify];
+        }
+
+        // Set up edit menu
 		NSMenuItem *editMenuItem = [[NSApp mainMenu] itemWithTitle:@"Edit"];
 		if (editMenuItem) {
 			[[editMenuItem submenu] addItem:[NSMenuItem separatorItem]];

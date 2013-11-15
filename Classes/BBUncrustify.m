@@ -60,7 +60,7 @@ static NSString *BBUUIDString() {
 
         // Only format files actually in the main workspace.
 		if (workspaceRoot && ![[configurationFileURL absoluteString] hasPrefix:[workspaceRoot absoluteString]]) {
-			NSLog(@"Uncrustify: Short-circuit: do not auto-format source file without config, %@.", sourceFileName);
+			NSLog(@"Uncrustify: Short-circuit: do not auto-format source file without config, (%@ / %@).", sourceFilePath, [configurationFileURL absoluteString]);
 			return codeFragment;
 		}
 

@@ -72,6 +72,9 @@ static NSString *BBUUIDString() {
 
         NSLog(@"Uncrustify: Found good config file for source (%@ / %@).", sourceFilePath, [configurationFileURL absoluteString]);
     }
+    else {
+        NSLog(@"Uncrustify: no config file check. Uncrustifying (%@ / %@)", sourceFilePath, [configurationFileURL absoluteString]);
+    }
 
     if ([options[BBUncrustifyOptionEvictCommentInsertion] boolValue]) {
         NSString *configuration = [[NSString alloc] initWithContentsOfURL:configurationFileURL encoding:NSUTF8StringEncoding error:nil];

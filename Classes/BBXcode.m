@@ -189,13 +189,13 @@ NSString *BBStringByTrimmingTrailingCharactersFromString(NSString *string, NSCha
 
 		[textStorage beginEditing];
 		NSString *uncrustifiedCode = [BBUncrustify uncrustifyCodeFragment:textStorage.string options:options];
-		[[document undoManager] beginUndoGrouping];
 		if (![uncrustifiedCode isEqualToString:textStorage.string]) {
+            [[document undoManager] beginUndoGrouping];
 			[textStorage replaceCharactersInRange:NSMakeRange(0, textStorage.string.length) withString:uncrustifiedCode withUndoManager:[document undoManager]];
+            [BBXcode normalizeCodeAtRange:NSMakeRange(0, textStorage.string.length) document:document];
+            [[document undoManager] endUndoGrouping];
+            [textStorage endEditing];
 		}
-		[BBXcode normalizeCodeAtRange:NSMakeRange(0, textStorage.string.length) document:document];
-		[[document undoManager] endUndoGrouping];
-		[textStorage endEditing];
 	}
 
 	BOOL codeHasChanged = (originalString && ![originalString isEqualToString:textStorage.string]);

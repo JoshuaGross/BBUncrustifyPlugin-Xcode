@@ -6,8 +6,10 @@
 //
 //
 
+#import <Foundation/Foundation.h>
 #import "BBXcode.h"
 #import "BBUncrustify.h"
+#import "DiffMatchPatch.h"
 
 NSString *const BBUserDefaultsCodeFormattingScheme = @"uncrustify_plugin_codeFormattingScheme";
 
@@ -155,14 +157,9 @@ NSString *BBStringByTrimmingTrailingCharactersFromString(NSString *string, NSCha
 
 #pragma mark - Uncrustify
 
-+ (BOOL)uncrustifyCodeOfDocument:(IDESourceCodeDocument *)document inWorkspace:(IDEWorkspace *)workspace {
-	return [BBXcode uncrustifyCodeOfDocument:document inWorkspace:workspace requireCustomConfig:NO];
-}
-
-+ (BOOL)uncrustifyCodeOfDocument:(IDESourceCodeDocument *)document inWorkspace:(IDEWorkspace *)workspace requireCustomConfig:(BOOL)requireCustomConfig {
++ (BOOL)uncrustifyCodeOfDocument:(IDESourceCodeDocument *)document inTextView:(NSTextView *)textView inWorkspace:(IDEWorkspace *)workspace requireCustomConfig:(BOOL)requireCustomConfig {
 	DVTSourceTextStorage *textStorage = [document textStorage];
-
-	NSString *originalString = [NSString stringWithString:textStorage.string];
+    NSMutableArray *selectedRanges = [[textView selectedRanges] mutableCopy];
 
 	if (textStorage.string.length > 0) {
 		NSArray *additionalConfigurationFolderURLs = nil;
@@ -188,18 +185,97 @@ NSString *BBStringByTrimmingTrailingCharactersFromString(NSString *string, NSCha
 		}
 
 		NSString *uncrustifiedCode = [BBUncrustify uncrustifyCodeFragment:textStorage.string options:options];
-		if (![uncrustifiedCode isEqualToString:textStorage.string]) {
-            [textStorage beginEditing];
-            [[document undoManager] beginUndoGrouping];
-			[textStorage replaceCharactersInRange:NSMakeRange(0, textStorage.string.length) withString:uncrustifiedCode withUndoManager:[document undoManager]];
-            [BBXcode normalizeCodeAtRange:NSMakeRange(0, textStorage.string.length) document:document];
-            [[document undoManager] endUndoGrouping];
-            [textStorage endEditing];
-		}
-	}
+		if ([uncrustifiedCode isEqualToString:textStorage.string]) {
+            return NO;
+        }
 
-	BOOL codeHasChanged = (originalString && ![originalString isEqualToString:textStorage.string]);
-	return codeHasChanged;
+        // Build diff.
+        DiffMatchPatch *dmp = [DiffMatchPatch new];
+        NSMutableArray *diffs = [dmp diff_mainOfOldString:textStorage.string andNewString:uncrustifiedCode];
+
+        // Make changes to document.
+        [textStorage beginEditing];
+        [[document undoManager] beginUndoGrouping];
+
+        // Apply diff
+        NSUInteger currentPosition = 0;
+        for (int i = 0; i < [diffs count]; i++) {
+            Diff *diff = [diffs objectAtIndex:i];
+            NSString *currentDocumentText = textStorage.string;
+            NSUInteger effectiveLength = (diff.operation == DIFF_INSERT ? 0 : diff.text.length);
+            if ((currentPosition+effectiveLength) > currentDocumentText.length) {
+                NSLog(@"Uncrustify: range out of bounds.");
+                continue;
+            }
+
+            NSLog(@"Uncrustify: Selected ranges: %@", selectedRanges);
+
+            NSRange range = NSMakeRange(currentPosition, effectiveLength);
+            NSString *relevantTextInDoc = [currentDocumentText substringWithRange:range];
+
+            if (![relevantTextInDoc isEqualToString:diff.text]) {
+                NSLog(@"Uncrustify: cannot apply diff: %d", diff.operation);
+                NSLog(@"Uncrustify: cannot apply diff: Old: %@", currentDocumentText);
+                NSLog(@"Uncrustify: cannot apply diff: New: %@", diff.text);
+                continue;
+            }
+
+            NSInteger changePosition = 0, changeSelection = 0;
+
+            if (diff.operation == DIFF_EQUAL) {
+                changePosition = diff.text.length;
+            }
+            else if (diff.operation == DIFF_DELETE) {
+                [textStorage replaceCharactersInRange:range withString:@"" withUndoManager:[document undoManager]];
+                changeSelection = -diff.text.length;
+            }
+            else if (diff.operation == DIFF_INSERT) {
+                [textStorage replaceCharactersInRange:range withString:diff.text withUndoManager:[document undoManager]];
+                changePosition = changeSelection = diff.text.length;
+            }
+
+            // Update text ranges
+            for (NSUInteger j = 0; j < selectedRanges.count; j++) {
+                NSRange selRange = [[selectedRanges objectAtIndex:j] rangeValue];
+                NSRange newRange = selRange;
+
+                // Change text before selection
+                if (selRange.location > currentPosition) {
+                    newRange = NSMakeRange(selRange.location + changeSelection, selRange.length);
+                }
+                // Change text in selection
+                else if (selRange.location <= currentPosition && (selRange.location + selRange.length) >= (currentPosition+effectiveLength)) {
+                    newRange = NSMakeRange(selRange.location, selRange.length+changeSelection);
+                }
+
+                [selectedRanges setObject:[NSValue valueWithRange:newRange]
+                       atIndexedSubscript:j];
+            }
+
+            currentPosition += changePosition;
+        }
+
+        // Normalize code via Xcode and end editing
+        [BBXcode normalizeCodeAtRange:NSMakeRange(0, textStorage.string.length) document:document];
+        [[document undoManager] endUndoGrouping];
+        [textStorage endEditing];
+
+        // Reselect ranges after changes
+        [textView setSelectedRanges:selectedRanges];
+        [textView scrollRangeToVisible:[[selectedRanges objectAtIndex:0] rangeValue]];
+        
+        return YES;
+	}
+    
+	return NO;
+}
+
++ (BOOL)uncrustifyCodeOfDocument:(IDESourceCodeDocument *)document inWorkspace:(IDEWorkspace *)workspace {
+	return [BBXcode uncrustifyCodeOfDocument:document inWorkspace:workspace requireCustomConfig:NO];
+}
+
++ (BOOL)uncrustifyCodeOfDocument:(IDESourceCodeDocument *)document inWorkspace:(IDEWorkspace *)workspace requireCustomConfig:(BOOL)requireCustomConfig {
+    return [BBXcode uncrustifyCodeOfDocument:document inTextView:nil inWorkspace:workspace requireCustomConfig:requireCustomConfig];
 }
 
 + (BOOL)uncrustifyCodeAtRanges:(NSArray *)ranges document:(IDESourceCodeDocument *)document inWorkspace:(IDEWorkspace *)workspace {

@@ -7,9 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		141251A216F4AA8600A18D23 /* BBXcode.m in Sources */ = {isa = PBXBuildFile; fileRef = 141251A116F4AA8600A18D23 /* BBXcode.m */; };
 		1414D3C51710D549002378C0 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1414D3C41710D549002378C0 /* Sparkle.framework */; };
-		1414D3C8171163CA002378C0 /* BBPluginUpdater.m in Sources */ = {isa = PBXBuildFile; fileRef = 1414D3C7171163CA002378C0 /* BBPluginUpdater.m */; };
 		1414D3CA17116556002378C0 /* sparkle_dsa_pub.pem in Resources */ = {isa = PBXBuildFile; fileRef = 1414D3C917116556002378C0 /* sparkle_dsa_pub.pem */; };
 		1435669616FD0E0000FECDEB /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1435669516FD0E0000FECDEB /* Cocoa.framework */; };
 		1435669816FD0E0400FECDEB /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1435669716FD0E0400FECDEB /* AppKit.framework */; };
@@ -19,11 +17,19 @@
 		14617B3616FD9BDB00C7C91B /* IDEKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 14617B3216FD9BDB00C7C91B /* IDEKit.framework */; };
 		147264381711732F002BC0BE /* icon.icns in Resources */ = {isa = PBXBuildFile; fileRef = 147264371711732F002BC0BE /* icon.icns */; };
 		14CE84DC16F4A57A008082AB /* uncrustify.cfg in Resources */ = {isa = PBXBuildFile; fileRef = 14CE84DA16F49D6F008082AB /* uncrustify.cfg */; };
-		14CE84DD16F4A57D008082AB /* uncrustify in Resources */ = {isa = PBXBuildFile; fileRef = 14CE84D916F49A02008082AB /* uncrustify */; };
 		14EFEEDA171167BB0068BB83 /* Sparkle.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1414D3C41710D549002378C0 /* Sparkle.framework */; };
-		14FF378D16F490F60049868C /* BBUncrustify.m in Sources */ = {isa = PBXBuildFile; fileRef = 14FF378C16F490F60049868C /* BBUncrustify.m */; };
+		8F69D3F51838581D0040B833 /* BBPluginUpdater.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F69D3EE1838581D0040B833 /* BBPluginUpdater.m */; };
+		8F69D3F61838581D0040B833 /* BBUncrustify.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F69D3F01838581D0040B833 /* BBUncrustify.m */; };
+		8F69D3F71838581D0040B833 /* BBUncrustifyPlugin.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F69D3F21838581D0040B833 /* BBUncrustifyPlugin.m */; };
+		8F69D3F81838581D0040B833 /* BBXcode.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F69D3F41838581D0040B833 /* BBXcode.m */; };
+		8F69D3FA1838588D0040B833 /* uncrustify in Resources */ = {isa = PBXBuildFile; fileRef = 8F69D3F91838588D0040B833 /* uncrustify */; };
+		8F69D40C18385FB40040B833 /* DiffMatchPatch.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F69D40018385FB40040B833 /* DiffMatchPatch.m */; };
+		8F69D40D18385FB40040B833 /* DiffMatchPatchCFUtilities.c in Sources */ = {isa = PBXBuildFile; fileRef = 8F69D40118385FB40040B833 /* DiffMatchPatchCFUtilities.c */; };
+		8F69D40E18385FB40040B833 /* NSMutableDictionary+DMPExtensions.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F69D40518385FB40040B833 /* NSMutableDictionary+DMPExtensions.m */; };
+		8F69D40F18385FB40040B833 /* NSString+JavaSubstring.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F69D40718385FB40040B833 /* NSString+JavaSubstring.m */; };
+		8F69D41018385FB40040B833 /* NSString+UnicharUtilities.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F69D40918385FB40040B833 /* NSString+UnicharUtilities.m */; };
+		8F69D41118385FB40040B833 /* NSString+UriCompatibility.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F69D40B18385FB40040B833 /* NSString+UriCompatibility.m */; };
 		DA1B5D020E64686800921439 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 089C1672FE841209C02AAC07 /* Foundation.framework */; };
-		DA37E2DC0E6291C8001BDFEF /* BBUncrustifyPlugin.m in Sources */ = {isa = PBXBuildFile; fileRef = DA37E2DB0E6291C8001BDFEF /* BBUncrustifyPlugin.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -42,10 +48,7 @@
 
 /* Begin PBXFileReference section */
 		089C1672FE841209C02AAC07 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
-		141251A116F4AA8600A18D23 /* BBXcode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BBXcode.m; sourceTree = "<group>"; };
 		1414D3C41710D549002378C0 /* Sparkle.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Sparkle.framework; sourceTree = "<group>"; };
-		1414D3C6171163CA002378C0 /* BBPluginUpdater.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BBPluginUpdater.h; sourceTree = "<group>"; };
-		1414D3C7171163CA002378C0 /* BBPluginUpdater.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BBPluginUpdater.m; sourceTree = "<group>"; };
 		1414D3C917116556002378C0 /* sparkle_dsa_pub.pem */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sparkle_dsa_pub.pem; sourceTree = "<group>"; };
 		1435669516FD0E0000FECDEB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		1435669716FD0E0400FECDEB /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -54,15 +57,32 @@
 		14617B3116FD9BDB00C7C91B /* IDEFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IDEFoundation.framework; path = ../../../../../../../Applications/Xcode.app/Contents/Frameworks/IDEFoundation.framework; sourceTree = "<group>"; };
 		14617B3216FD9BDB00C7C91B /* IDEKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IDEKit.framework; path = ../../../../../../../Applications/Xcode.app/Contents/Frameworks/IDEKit.framework; sourceTree = "<group>"; };
 		147264371711732F002BC0BE /* icon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = icon.icns; sourceTree = "<group>"; };
-		149B117816F483D3000F9C01 /* BBXcode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BBXcode.h; sourceTree = "<group>"; };
-		14CE84D916F49A02008082AB /* uncrustify */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = uncrustify; sourceTree = "<group>"; };
 		14CE84DA16F49D6F008082AB /* uncrustify.cfg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = uncrustify.cfg; sourceTree = "<group>"; };
-		14FF378B16F490F60049868C /* BBUncrustify.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BBUncrustify.h; sourceTree = "<group>"; };
-		14FF378C16F490F60049868C /* BBUncrustify.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BBUncrustify.m; sourceTree = "<group>"; };
-		7F2B355F15FA59D000DB3249 /* BBUncrustifyPlugin.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BBUncrustifyPlugin.h; sourceTree = "<group>"; };
 		8D5B49B6048680CD000E48DA /* UncrustifyPlugin.xcplugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = UncrustifyPlugin.xcplugin; sourceTree = BUILT_PRODUCTS_DIR; };
 		8D5B49B7048680CD000E48DA /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		DA37E2DB0E6291C8001BDFEF /* BBUncrustifyPlugin.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BBUncrustifyPlugin.m; sourceTree = "<group>"; };
+		8F69D3ED1838581D0040B833 /* BBPluginUpdater.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BBPluginUpdater.h; sourceTree = "<group>"; };
+		8F69D3EE1838581D0040B833 /* BBPluginUpdater.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BBPluginUpdater.m; sourceTree = "<group>"; };
+		8F69D3EF1838581D0040B833 /* BBUncrustify.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BBUncrustify.h; sourceTree = "<group>"; };
+		8F69D3F01838581D0040B833 /* BBUncrustify.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BBUncrustify.m; sourceTree = "<group>"; };
+		8F69D3F11838581D0040B833 /* BBUncrustifyPlugin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BBUncrustifyPlugin.h; sourceTree = "<group>"; };
+		8F69D3F21838581D0040B833 /* BBUncrustifyPlugin.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BBUncrustifyPlugin.m; sourceTree = "<group>"; };
+		8F69D3F31838581D0040B833 /* BBXcode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BBXcode.h; sourceTree = "<group>"; };
+		8F69D3F41838581D0040B833 /* BBXcode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BBXcode.m; sourceTree = "<group>"; };
+		8F69D3F91838588D0040B833 /* uncrustify */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = uncrustify; sourceTree = "<group>"; };
+		8F69D3FE18385FB40040B833 /* DiffMatchPatch_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DiffMatchPatch_Prefix.pch; sourceTree = "<group>"; };
+		8F69D3FF18385FB40040B833 /* DiffMatchPatch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DiffMatchPatch.h; sourceTree = "<group>"; };
+		8F69D40018385FB40040B833 /* DiffMatchPatch.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DiffMatchPatch.m; sourceTree = "<group>"; };
+		8F69D40118385FB40040B833 /* DiffMatchPatchCFUtilities.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = DiffMatchPatchCFUtilities.c; sourceTree = "<group>"; };
+		8F69D40218385FB40040B833 /* DiffMatchPatchCFUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DiffMatchPatchCFUtilities.h; sourceTree = "<group>"; };
+		8F69D40318385FB40040B833 /* MinMaxMacros.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MinMaxMacros.h; sourceTree = "<group>"; };
+		8F69D40418385FB40040B833 /* NSMutableDictionary+DMPExtensions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSMutableDictionary+DMPExtensions.h"; sourceTree = "<group>"; };
+		8F69D40518385FB40040B833 /* NSMutableDictionary+DMPExtensions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSMutableDictionary+DMPExtensions.m"; sourceTree = "<group>"; };
+		8F69D40618385FB40040B833 /* NSString+JavaSubstring.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSString+JavaSubstring.h"; sourceTree = "<group>"; };
+		8F69D40718385FB40040B833 /* NSString+JavaSubstring.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSString+JavaSubstring.m"; sourceTree = "<group>"; };
+		8F69D40818385FB40040B833 /* NSString+UnicharUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSString+UnicharUtilities.h"; sourceTree = "<group>"; };
+		8F69D40918385FB40040B833 /* NSString+UnicharUtilities.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSString+UnicharUtilities.m"; sourceTree = "<group>"; };
+		8F69D40A18385FB40040B833 /* NSString+UriCompatibility.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSString+UriCompatibility.h"; sourceTree = "<group>"; };
+		8F69D40B18385FB40040B833 /* NSString+UriCompatibility.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSString+UriCompatibility.m"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -87,7 +107,7 @@
 		089C166AFE841209C02AAC07 /* QuietXcode */ = {
 			isa = PBXGroup;
 			children = (
-				7F411B0C15FABAC6002F77B6 /* Classes */,
+				8F69D3EC1838581D0040B833 /* Classes */,
 				089C167CFE841241C02AAC07 /* Resources */,
 				089C1671FE841209C02AAC07 /* Frameworks and Libraries */,
 				19C28FB8FE9D52D311CA2CBB /* Products */,
@@ -115,8 +135,8 @@
 			children = (
 				8D5B49B7048680CD000E48DA /* Info.plist */,
 				147264371711732F002BC0BE /* icon.icns */,
+				8F69D3F91838588D0040B833 /* uncrustify */,
 				14CE84DA16F49D6F008082AB /* uncrustify.cfg */,
-				14CE84D916F49A02008082AB /* uncrustify */,
 				1414D3C917116556002378C0 /* sparkle_dsa_pub.pem */,
 			);
 			path = Resources;
@@ -130,19 +150,41 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		7F411B0C15FABAC6002F77B6 /* Classes */ = {
+		8F69D3EC1838581D0040B833 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
-				7F2B355F15FA59D000DB3249 /* BBUncrustifyPlugin.h */,
-				DA37E2DB0E6291C8001BDFEF /* BBUncrustifyPlugin.m */,
-				14FF378B16F490F60049868C /* BBUncrustify.h */,
-				14FF378C16F490F60049868C /* BBUncrustify.m */,
-				149B117816F483D3000F9C01 /* BBXcode.h */,
-				141251A116F4AA8600A18D23 /* BBXcode.m */,
-				1414D3C6171163CA002378C0 /* BBPluginUpdater.h */,
-				1414D3C7171163CA002378C0 /* BBPluginUpdater.m */,
+				8F92763718494EF90091B22D /* DMP */,
+				8F69D3ED1838581D0040B833 /* BBPluginUpdater.h */,
+				8F69D3EE1838581D0040B833 /* BBPluginUpdater.m */,
+				8F69D3EF1838581D0040B833 /* BBUncrustify.h */,
+				8F69D3F01838581D0040B833 /* BBUncrustify.m */,
+				8F69D3F11838581D0040B833 /* BBUncrustifyPlugin.h */,
+				8F69D3F21838581D0040B833 /* BBUncrustifyPlugin.m */,
+				8F69D3F31838581D0040B833 /* BBXcode.h */,
+				8F69D3F41838581D0040B833 /* BBXcode.m */,
 			);
 			path = Classes;
+			sourceTree = "<group>";
+		};
+		8F92763718494EF90091B22D /* DMP */ = {
+			isa = PBXGroup;
+			children = (
+				8F69D3FE18385FB40040B833 /* DiffMatchPatch_Prefix.pch */,
+				8F69D3FF18385FB40040B833 /* DiffMatchPatch.h */,
+				8F69D40018385FB40040B833 /* DiffMatchPatch.m */,
+				8F69D40118385FB40040B833 /* DiffMatchPatchCFUtilities.c */,
+				8F69D40218385FB40040B833 /* DiffMatchPatchCFUtilities.h */,
+				8F69D40318385FB40040B833 /* MinMaxMacros.h */,
+				8F69D40418385FB40040B833 /* NSMutableDictionary+DMPExtensions.h */,
+				8F69D40518385FB40040B833 /* NSMutableDictionary+DMPExtensions.m */,
+				8F69D40618385FB40040B833 /* NSString+JavaSubstring.h */,
+				8F69D40718385FB40040B833 /* NSString+JavaSubstring.m */,
+				8F69D40818385FB40040B833 /* NSString+UnicharUtilities.h */,
+				8F69D40918385FB40040B833 /* NSString+UnicharUtilities.m */,
+				8F69D40A18385FB40040B833 /* NSString+UriCompatibility.h */,
+				8F69D40B18385FB40040B833 /* NSString+UriCompatibility.m */,
+			);
+			name = DMP;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -200,7 +242,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				14CE84DC16F4A57A008082AB /* uncrustify.cfg in Resources */,
-				14CE84DD16F4A57D008082AB /* uncrustify in Resources */,
+				8F69D3FA1838588D0040B833 /* uncrustify in Resources */,
 				1414D3CA17116556002378C0 /* sparkle_dsa_pub.pem in Resources */,
 				147264381711732F002BC0BE /* icon.icns in Resources */,
 			);
@@ -213,10 +255,16 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				DA37E2DC0E6291C8001BDFEF /* BBUncrustifyPlugin.m in Sources */,
-				14FF378D16F490F60049868C /* BBUncrustify.m in Sources */,
-				141251A216F4AA8600A18D23 /* BBXcode.m in Sources */,
-				1414D3C8171163CA002378C0 /* BBPluginUpdater.m in Sources */,
+				8F69D3F71838581D0040B833 /* BBUncrustifyPlugin.m in Sources */,
+				8F69D40F18385FB40040B833 /* NSString+JavaSubstring.m in Sources */,
+				8F69D3F51838581D0040B833 /* BBPluginUpdater.m in Sources */,
+				8F69D41118385FB40040B833 /* NSString+UriCompatibility.m in Sources */,
+				8F69D3F61838581D0040B833 /* BBUncrustify.m in Sources */,
+				8F69D40E18385FB40040B833 /* NSMutableDictionary+DMPExtensions.m in Sources */,
+				8F69D40D18385FB40040B833 /* DiffMatchPatchCFUtilities.c in Sources */,
+				8F69D40C18385FB40040B833 /* DiffMatchPatch.m in Sources */,
+				8F69D41018385FB40040B833 /* NSString+UnicharUtilities.m in Sources */,
+				8F69D3F81838581D0040B833 /* BBXcode.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -243,6 +291,11 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					DiffMatchPatch,
 				);
 				INFOPLIST_FILE = Resources/Info.plist;
 				INSTALL_PATH = "/Library/Application Support/Developer/Shared/Xcode/Plug-ins";
@@ -276,7 +329,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INSTALL_PATH = "$(HOME)/Library/Application Support/Developer/Shared/Xcode/Plug-ins";
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				PRODUCT_NAME = UncrustifyPlugin;
 				SDKROOT = macosx;
 			};

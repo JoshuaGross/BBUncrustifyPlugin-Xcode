@@ -105,18 +105,17 @@ static BBUncrustifyPlugin *sharedPlugin = nil;
 
 		[_openFileHashes setValue:existingRecord forKey:openFileName];
 
-		// Uncrustify a file if it has been closed, or changed, between 3-4 seconds ago.
+		// Uncrustify a file if it has been closed, or changed, around 1 seconds ago.
 		for (NSString *key in [_openFileHashes copy]) {
 			NSDictionary *fileDetailsDict = [_openFileHashes valueForKey:key];
 			NSDate *pollTime = [fileDetailsDict valueForKey:@"pt"];
-			if (fabsf([pollTime timeIntervalSinceNow]) < 3 || fabsf([pollTime timeIntervalSinceNow]) > 5) {
+			if (fabsf([pollTime timeIntervalSinceNow]) < 0.5 || fabsf([pollTime timeIntervalSinceNow]) > 3) {
 				continue;
 			}
 			if (![fileDetailsDict[@"dirty"] boolValue]) {
 				continue;
 			}
 
-			// The document needs to have been open for at least 5 seconds and to have changed.
 			IDESourceCodeDocument *doc = [fileDetailsDict valueForKey:@"doc"];
 			NSTextView *textView = [fileDetailsDict valueForKey:@"textview"];
 			[self uncrustifySourceCodeTextView:textView inDocument:doc requireCustomConfig:YES];
@@ -126,9 +125,9 @@ static BBUncrustifyPlugin *sharedPlugin = nil;
 		}
 	}
 
-	// Trigger uncrustify check every 2 seconds
+	// Trigger uncrustify check every second
 	if ([[NSUserDefaults standardUserDefaults] boolForKey:kBBAutoUncrustify]) {
-		double delayInSeconds = 2.0;
+		double delayInSeconds = 1.0;
 		dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
 		dispatch_after(popTime, dispatch_get_main_queue(), ^(void) {
 		    [self automaticUncrustify];
@@ -137,57 +136,8 @@ static BBUncrustifyPlugin *sharedPlugin = nil;
 }
 
 - (void)uncrustifySourceCodeTextView:(NSTextView *)textView inDocument:(IDESourceCodeDocument *)document requireCustomConfig:(BOOL)requireCustomConfig {
-	DVTSourceTextStorage *textStorage = [document textStorage];
-
-	// We try to restore the original cursor position after the uncrustification. We compute a percentage value
-	// expressing the actual selected line compared to the total number of lines of the document. After the uncrustification,
-	// we restore the position taking into account the modified number of lines of the document.
-
-	CGRect visibleRect = [textView visibleRect];
-	NSArray *originalRanges = [textView selectedRanges];
-	NSRange originalCharacterRange = [textView selectedRange];
-	NSRange originalLineRange = [textStorage lineRangeForCharacterRange:originalCharacterRange];
-	NSRange originalDocumentLineRange = [textStorage lineRangeForCharacterRange:NSMakeRange(0, textStorage.string.length)];
-	NSUInteger originalLength = textStorage.string.length;
-
-	CGFloat verticalRelativePosition = (CGFloat)originalLineRange.location / (CGFloat)originalDocumentLineRange.length;
-
 	IDEWorkspace *currentWorkspace = [BBXcode currentWorkspaceDocument].workspace;
-	[BBXcode uncrustifyCodeOfDocument:document inWorkspace:currentWorkspace requireCustomConfig:requireCustomConfig];
-
-	NSUInteger newLength = textStorage.string.length;
-	NSInteger lengthDiff = originalLength - newLength;
-	NSRange newDocumentLineRange = [textStorage lineRangeForCharacterRange:NSMakeRange(0, textStorage.string.length)];
-	NSUInteger originalLine = roundf(verticalRelativePosition * (CGFloat)originalDocumentLineRange.length);
-	NSUInteger restoredLine = roundf(verticalRelativePosition * (CGFloat)newDocumentLineRange.length);
-
-	if (newLength < restoredLine) {
-		return;
-	}
-
-	NSRange newCharacterRange = [textStorage characterRangeForLineRange:NSMakeRange(restoredLine, 0)];
-
-	if ((newCharacterRange.location + newCharacterRange.length) < textStorage.string.length) {
-		// move cursor adsf
-		[textView scrollRectToVisible:visibleRect];
-
-		// If we can just select all the initial ranges (say, if the number of lines hasn't changed) do so.
-		// We make the selection after adjusting ranges in the most naive way -
-		//  by adding/subtracting the change in string length.
-		if (originalLine == restoredLine) {
-			NSMutableArray *ranges = [[NSMutableArray alloc] initWithCapacity:originalRanges.count];
-			for (NSValue *rangeValue in originalRanges) {
-				NSRange adjustedRange = [rangeValue rangeValue];
-				adjustedRange.location -= lengthDiff;
-				[ranges addObject:[NSValue valueWithRange:adjustedRange]];
-			}
-			[textView setSelectedRanges:ranges];
-			[ranges release];
-		}
-		else {
-			[textView setSelectedRange:newCharacterRange affinity:NSSelectionAffinityDownstream stillSelecting:NO];
-		}
-	}
+	[BBXcode uncrustifyCodeOfDocument:document inTextView:textView inWorkspace:currentWorkspace requireCustomConfig:requireCustomConfig];
 }
 
 #pragma mark - Actions

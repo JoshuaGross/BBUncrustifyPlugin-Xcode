@@ -105,11 +105,11 @@ static BBUncrustifyPlugin *sharedPlugin = nil;
 
 		[_openFileHashes setValue:existingRecord forKey:openFileName];
 
-		// Uncrustify a file if it has been closed, or changed, around 1 seconds ago.
+		// Uncrustify a file if it has been closed, or changed, around 1 second ago.
 		for (NSString *key in [_openFileHashes copy]) {
 			NSDictionary *fileDetailsDict = [_openFileHashes valueForKey:key];
 			NSDate *pollTime = [fileDetailsDict valueForKey:@"pt"];
-			if (fabsf([pollTime timeIntervalSinceNow]) < 0.5 || fabsf([pollTime timeIntervalSinceNow]) > 3) {
+			if (fabsf([pollTime timeIntervalSinceNow]) < 0.5 || fabsf([pollTime timeIntervalSinceNow]) > 2) {
 				continue;
 			}
 			if (![fileDetailsDict[@"dirty"] boolValue]) {

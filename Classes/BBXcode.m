@@ -159,7 +159,7 @@ NSString *BBStringByTrimmingTrailingCharactersFromString(NSString *string, NSCha
 
 + (BOOL)uncrustifyCodeOfDocument:(IDESourceCodeDocument *)document inTextView:(NSTextView *)textView inWorkspace:(IDEWorkspace *)workspace requireCustomConfig:(BOOL)requireCustomConfig {
 	DVTSourceTextStorage *textStorage = [document textStorage];
-    NSMutableArray *selectedRanges = [[textView selectedRanges] mutableCopy];
+    NSArray *selectedRanges = [textView selectedRanges];
 
 	if (textStorage.string.length > 0) {
 		NSArray *additionalConfigurationFolderURLs = nil;
@@ -184,14 +184,15 @@ NSString *BBStringByTrimmingTrailingCharactersFromString(NSString *string, NSCha
 			[options setObject:additionalConfigurationFolderURLs forKey:BBUncrustifyOptionSupplementalConfigurationFolders];
 		}
 
-		NSString *uncrustifiedCode = [BBUncrustify uncrustifyCodeFragment:textStorage.string options:options];
+        NSString *originalCode = [textStorage.string copy];
+		NSString *uncrustifiedCode = [BBUncrustify uncrustifyCodeFragment:originalCode options:options];
 		if ([uncrustifiedCode isEqualToString:textStorage.string]) {
             return NO;
         }
 
         // Build diff.
         DiffMatchPatch *dmp = [DiffMatchPatch new];
-        NSMutableArray *diffs = [dmp diff_mainOfOldString:textStorage.string andNewString:uncrustifiedCode];
+        NSMutableArray *diffs = [dmp diff_mainOfOldString:originalCode andNewString:uncrustifiedCode];
 
         // Make changes to document.
         [textStorage beginEditing];
@@ -199,6 +200,7 @@ NSString *BBStringByTrimmingTrailingCharactersFromString(NSString *string, NSCha
 
         // Apply diff
         NSUInteger currentPosition = 0;
+        BOOL diffFailed = NO;
         for (int i = 0; i < [diffs count]; i++) {
             Diff *diff = [diffs objectAtIndex:i];
             NSString *currentDocumentText = textStorage.string;
@@ -208,67 +210,121 @@ NSString *BBStringByTrimmingTrailingCharactersFromString(NSString *string, NSCha
                 continue;
             }
 
-            NSLog(@"Uncrustify: Selected ranges: %@", selectedRanges);
-
             NSRange range = NSMakeRange(currentPosition, effectiveLength);
             NSString *relevantTextInDoc = [currentDocumentText substringWithRange:range];
 
-            if (![relevantTextInDoc isEqualToString:diff.text]) {
-                NSLog(@"Uncrustify: cannot apply diff: %d", diff.operation);
-                NSLog(@"Uncrustify: cannot apply diff: Old: %@", currentDocumentText);
-                NSLog(@"Uncrustify: cannot apply diff: New: %@", diff.text);
-                continue;
+            NSLog(@"Uncrustify: attempt to apply diff: %d %ld %ld", diff.operation, currentPosition, (long)effectiveLength);
+            NSLog(@"Uncrustify: apply diff: Docu text: '%@'", relevantTextInDoc);
+            NSLog(@"Uncrustify: apply diff: Diff text: '%@'", diff.text);
+
+            if (diff.operation != DIFF_INSERT && ![relevantTextInDoc isEqualToString:diff.text]) {
+                diffFailed = YES;
+                NSLog(@"Uncrustify: cannot apply diff.");
+                break;
             }
 
-            NSInteger changePosition = 0, changeSelection = 0;
+            NSInteger changePosition = 0;
 
             if (diff.operation == DIFF_EQUAL) {
                 changePosition = diff.text.length;
             }
             else if (diff.operation == DIFF_DELETE) {
                 [textStorage replaceCharactersInRange:range withString:@"" withUndoManager:[document undoManager]];
-                changeSelection = -diff.text.length;
             }
             else if (diff.operation == DIFF_INSERT) {
                 [textStorage replaceCharactersInRange:range withString:diff.text withUndoManager:[document undoManager]];
-                changePosition = changeSelection = diff.text.length;
+                changePosition = diff.text.length;
             }
-
-            // Update text ranges
-            for (NSUInteger j = 0; j < selectedRanges.count; j++) {
-                NSRange selRange = [[selectedRanges objectAtIndex:j] rangeValue];
-                NSRange newRange = selRange;
-
-                // Change text before selection
-                if (selRange.location > currentPosition) {
-                    newRange = NSMakeRange(selRange.location + changeSelection, selRange.length);
-                }
-                // Change text in selection
-                else if (selRange.location <= currentPosition && (selRange.location + selRange.length) >= (currentPosition+effectiveLength)) {
-                    newRange = NSMakeRange(selRange.location, selRange.length+changeSelection);
-                }
-
-                [selectedRanges setObject:[NSValue valueWithRange:newRange]
-                       atIndexedSubscript:j];
-            }
+            NSLog(@"Uncrustify: Apply diff: %d %@", diff.operation, diff.text);
 
             currentPosition += changePosition;
         }
 
-        // Normalize code via Xcode and end editing
-        [BBXcode normalizeCodeAtRange:NSMakeRange(0, textStorage.string.length) document:document];
-        [[document undoManager] endUndoGrouping];
-        [textStorage endEditing];
+        // If the diff failed, restore document contents and selection.
+        if (diffFailed) {
+            [[document undoManager] endUndoGrouping];
+            [[document undoManager] undo];
+            [textStorage endEditing];
+        }
+        else {
+            // Normalize code via Xcode and end editing.
+            [BBXcode normalizeCodeAtRange:NSMakeRange(0, textStorage.string.length) document:document];
+            [[document undoManager] endUndoGrouping];
+            [textStorage endEditing];
 
-        // Reselect ranges after changes
+            // Reselect ranges after changes. We need to do *another* diff since normalization may have changed code again.
+            selectedRanges = [BBXcode updateSelectionRanges:selectedRanges withOldText:originalCode andNewText:textStorage.string];
+        }
+
         [textView setSelectedRanges:selectedRanges];
         [textView scrollRangeToVisible:[[selectedRanges objectAtIndex:0] rangeValue]];
-        
-        return YES;
+
+        return !diffFailed;
 	}
     
 	return NO;
 }
+
++ (NSArray *)updateSelectionRanges:(NSArray *)selectionsIn withDiffs:(NSMutableArray *)diffs
+{
+    NSMutableArray *selections = [selectionsIn mutableCopy];
+    NSInteger currentPosition = 0;
+
+    NSLog(@"Uncrustify: update selections with diffs: %d", (int)[diffs count]);
+
+    for (int i = 0; i < [diffs count]; i++) {
+        Diff *diff = [diffs objectAtIndex:i];
+
+        NSUInteger effectiveLength = (diff.operation == DIFF_INSERT ? 0 : diff.text.length);
+        NSInteger changePosition = 0, changeSelection = 0;
+
+        if (diff.operation == DIFF_EQUAL) {
+            changePosition = diff.text.length;
+        }
+        else if (diff.operation == DIFF_DELETE) {
+            changeSelection = -diff.text.length;
+        }
+        else if (diff.operation == DIFF_INSERT) {
+            changePosition = changeSelection = diff.text.length;
+        }
+
+        currentPosition += changePosition;
+        NSLog(@"Uncrustify: %d %d", (int)changePosition, (int)changeSelection);
+
+        if (changeSelection == 0) {
+            continue;
+        }
+
+        NSLog(@"Uncrustify: Change selection by %ld", (long)changeSelection);
+
+        // Update text ranges
+        for (NSUInteger j = 0; j < selections.count; j++) {
+            NSRange selRange = [[selections objectAtIndex:j] rangeValue];
+
+            // Change text before selection
+            if (selRange.location > currentPosition) {
+                selRange = NSMakeRange(selRange.location + changeSelection, selRange.length);
+            }
+            // Change text in selection
+            else if (selRange.location <= currentPosition && (selRange.location + selRange.length) >= (currentPosition+effectiveLength)) {
+                selRange = NSMakeRange(selRange.location, selRange.length+changeSelection);
+            }
+
+            [selections setObject:[NSValue valueWithRange:selRange]
+               atIndexedSubscript:j];
+        }
+    }
+
+    return selections;
+}
+
++ (NSArray *)updateSelectionRanges:(NSArray *)selectionsIn withOldText:(NSString *)oldText andNewText:(NSString *)newText
+{
+    DiffMatchPatch *dmp = [DiffMatchPatch new];
+    NSMutableArray *diffs = [dmp diff_mainOfOldString:oldText andNewString:newText];
+    return [BBXcode updateSelectionRanges:selectionsIn withDiffs:diffs];
+}
+
 
 + (BOOL)uncrustifyCodeOfDocument:(IDESourceCodeDocument *)document inWorkspace:(IDEWorkspace *)workspace {
 	return [BBXcode uncrustifyCodeOfDocument:document inWorkspace:workspace requireCustomConfig:NO];

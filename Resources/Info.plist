@@ -47,7 +47,7 @@
 	<key>SUEnableAutomaticChecks</key>
 	<false/>
 	<key>SUFeedURL</key>
-	<string>http://www.pragmaticcode.com/uncrustifyplugin/download/appcast.xml</string>
+	<string></string>
 	<key>SUPromptUserOnFirstLaunchKey</key>
 	<false/>
 	<key>SUPublicDSAKeyFile</key>

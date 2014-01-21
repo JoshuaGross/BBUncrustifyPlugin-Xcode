@@ -115,12 +115,16 @@ static BBUncrustifyPlugin *sharedPlugin = nil;
 			if (![fileDetailsDict[@"dirty"] boolValue]) {
 				continue;
 			}
+			if (fileDetailsDict[@"lastUncrustify"] && fabsf([fileDetailsDict[@"lastUncrustify"] timeIntervalSinceNow]) < 2) {
+				continue;
+			}
 
 			IDESourceCodeDocument *doc = [fileDetailsDict valueForKey:@"doc"];
 			NSTextView *textView = [fileDetailsDict valueForKey:@"textview"];
 			[self uncrustifySourceCodeTextView:textView inDocument:doc requireCustomConfig:YES];
 
 			existingRecord[@"oldHash"] = [NSNumber numberWithUnsignedInteger:openFileHash];
+			existingRecord[@"lastUncrustify"] = [NSDate date];
 			[_openFileHashes setValue:existingRecord forKey:openFileName];
 		}
 	}

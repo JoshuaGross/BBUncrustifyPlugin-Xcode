@@ -243,19 +243,20 @@ NSString *BBStringByTrimmingTrailingCharactersFromString(NSString *string, NSCha
         // If the diff failed, restore document contents and selection.
         if (diffFailed) {
             [[document undoManager] endUndoGrouping];
-            [[document undoManager] undo];
-            [textStorage endEditing];
+            if (![originalCode isEqualToString:textStorage.string]) {
+                [[document undoManager] undo];
+            }
         }
         else {
             // Normalize code via Xcode and end editing.
             [BBXcode normalizeCodeAtRange:NSMakeRange(0, textStorage.string.length) document:document];
             [[document undoManager] endUndoGrouping];
-            [textStorage endEditing];
 
             // Reselect ranges after changes. We need to do *another* diff since normalization may have changed code again.
             selectedRanges = [BBXcode updateSelectionRanges:selectedRanges withOldText:originalCode andNewText:textStorage.string];
         }
 
+        [textStorage endEditing];
         [textView setSelectedRanges:selectedRanges];
         [textView scrollRangeToVisible:[[selectedRanges objectAtIndex:0] rangeValue]];
 
